@@ -143,6 +143,7 @@ test("camera denial recovers and local hand/body models start and release the ca
     "true",
   );
   await expect(page.locator("#camera-preview")).toBeVisible();
+  await expect.poll(async () => (await state(page)).bodyTracking).toBe(true);
   await page.locator("#camera-button").click();
   await expect(page.locator("#camera-preview")).toBeHidden();
   expect(

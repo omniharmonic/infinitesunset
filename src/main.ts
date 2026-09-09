@@ -481,6 +481,7 @@ Object.defineProperty(window, "infiniteSunset", {
       settings: { ...settings },
       hands: input?.hands.length ?? 0,
       camera: input?.cameraEnabled ?? false,
+      bodyTracking: input?.bodyTrackingReady ?? false,
       ...sky.snapshot(),
     }),
   },

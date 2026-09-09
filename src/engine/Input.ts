@@ -170,6 +170,10 @@ export class Input {
     }
   }
 
+  get bodyTrackingReady() {
+    return Boolean(this.pose);
+  }
+
   stopCamera() {
     this.generation++;
     this.stream?.getTracks().forEach((t) => t.stop());
@@ -182,6 +186,8 @@ export class Input {
     this.cameraEnabled = false;
     this.cameraBusy = false;
     this.tracked = [];
+    this.posePoints = [];
+    this.handPoints = [];
     this.previous.clear();
     this.lastVideo = -1;
     this.gestures.clear();
