@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#634f70" />
+    <meta
+      name="description"
+      content="A sunset with nowhere to go. An endless, living sky of volumetric clouds. Slow down, change the light, or move the clouds with your hands. Free and open source."
+    />
+    <meta
+      property="og:title"
+      content="Infinite Sunset — a little more golden hour"
+    />
+    <meta
+      property="og:description"
+      content="An endless, living sky. Yours to linger in."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://infinitesunset.xyz" />
+    <link rel="icon" type="image/svg+xml" href="/icon.svg" />
+    <title>Infinite Sunset — a little more golden hour</title>
+  </head>
+  <body>
+    <canvas
+      id="sky"
+      aria-label="An interactive, slowly evolving sunset. Drag to move the clouds."
+      tabindex="0"
+    ></canvas>
+    <div id="loading" role="status">
+      <span class="sun-mark"></span>
+      <p>A little more golden hour.</p>
+      <small>Gathering the clouds</small>
+    </div>
+    <div id="interface">
+      <header>
+        <a class="wordmark" href="./" aria-label="Infinite Sunset home"
+          ><svg viewBox="0 0 56 30" aria-hidden="true">
+            <path
+              d="M3 21C8 9 17 9 28 17S48 26 53 13M3 21C8 33 19 27 28 17S47 4 53 13"
+            />
+            <path d="M19 7a11 11 0 0 1 20 0M28 1V-3" /></svg
+          ><span>infinite sunset</span></a
+        >
+        <div class="header-actions">
+          <span class="live"><i></i>A living sky</span
+          ><button
+            id="about-button"
+            class="icon"
+            title="About & keyboard shortcuts"
+            aria-label="About and keyboard shortcuts"
+          >
+            ?
+          </button>
+        </div>
+      </header>
+      <section id="introduction">
+        <p class="eyebrow">STAY A LITTLE LONGER</p>
+        <h1>Nowhere to be.<br />Nothing to chase.</h1>
+        <p>
+          The day's most beautiful moment,<br />with all the time in the world.
+        </p>
+      </section>
+      <div id="camera-preview" hidden>
+        <canvas id="tracking-preview" width="240" height="180"></canvas
+        ><span id="tracking-status">Camera is off</span>
+      </div>
+      <aside id="panel" hidden aria-label="Atmosphere controls">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">MAKE IT YOURS</p>
+            <h2>The atmosphere</h2>
+          </div>
+          <button
+            id="close-panel"
+            class="icon"
+            aria-label="Close atmosphere controls"
+          >
+            ×
+          </button>
+        </div>
+        <div class="setting">
+          <label for="palette">Color story</label
+          ><select id="palette">
+            <option value="journey">An endless journey</option>
+            <option value="golden">Honey & apricot</option>
+            <option value="rose">Rosewater</option>
+            <option value="lavender">Violet hour</option>
+            <option value="blue">Afterglow</option>
+            <option value="ember">Ember</option>
+          </select>
+        </div>
+        <div id="sliders">
+          <label class="range-label" for="density"
+            >Cloud cover <output id="density-value"></output
+            ><input id="density" type="range" min="0" max="100" step="1"
+          /></label>
+          <label class="range-label" for="speed"
+            >Drift <output id="speed-value"></output
+            ><input id="speed" type="range" min="0" max="100" step="1"
+          /></label>
+          <label class="range-label" for="billow"
+            >Breathing <output id="billow-value"></output
+            ><input id="billow" type="range" min="0" max="100" step="1"
+          /></label>
+          <label class="range-label" for="light"
+            >Sun position <output id="light-value"></output
+            ><input id="light" type="range" min="0" max="100" step="1"
+          /></label>
+          <label class="range-label" for="exposure"
+            >Glow <output id="exposure-value"></output
+            ><input id="exposure" type="range" min="40" max="180" step="1"
+          /></label>
+        </div>
+        <label class="switch-row" for="evolve"
+          ><span
+            >Let the light wander<small
+              >Color and sunlight slowly evolve</small
+            ></span
+          ><input id="evolve" type="checkbox" role="switch"
+        /></label>
+        <div class="setting quality">
+          <label for="quality">Rendering</label
+          ><select id="quality">
+            <option value="auto">Balanced · adaptive</option>
+            <option value="high">Full detail</option>
+            <option value="eco">Low energy</option>
+          </select>
+        </div>
+        <div class="panel-divider"></div>
+        <div class="camera-row">
+          <div>
+            <h3>A sky you can touch</h3>
+            <p>Move, gather, and swirl the clouds.</p>
+          </div>
+          <button id="camera-button" class="small-button" aria-pressed="false">
+            Use camera
+          </button>
+        </div>
+        <p class="privacy">
+          Your camera stays on this device. Nothing is recorded or uploaded.
+        </p>
+        <div class="gestures" aria-label="Cloud gesture">
+          <button data-action="flow" aria-pressed="true">Move</button
+          ><button data-action="gather" aria-pressed="false">Gather</button
+          ><button data-action="swirl" aria-pressed="false">Swirl</button
+          ><button data-action="push" aria-pressed="false">Scatter</button>
+        </div>
+        <p class="gesture-hint">
+          Drag anywhere in the sky. With your camera on, show your palms; pinch
+          to gather.
+        </p>
+        <div class="panel-footer">
+          <button id="reset" class="text-button">A new sky ↗</button
+          ><span id="engine">Starting</span>
+        </div>
+      </aside>
+      <footer>
+        <div class="footnote">
+          <span id="story-name">An endless journey</span
+          ><small>NO TWO MOMENTS THE SAME</small>
+        </div>
+        <nav class="toolbar" aria-label="Sunset controls">
+          <button id="atmosphere" aria-expanded="false" aria-controls="panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h16M4 17h16M9 4v6M16 14v6" /></svg
+            ><span>Atmosphere</span></button
+          ><span class="separator"></span
+          ><button
+            id="pause"
+            class="icon"
+            aria-label="Pause sunset"
+            title="Pause · Space"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5v14M16 5v14" />
+            </svg></button
+          ><button
+            id="capture"
+            class="icon"
+            aria-label="Save a picture"
+            title="Save a picture"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 7h4l2-3h4l2 3h4v13H4z" />
+              <circle cx="12" cy="13" r="4" />
+            </svg></button
+          ><button
+            id="share"
+            class="icon"
+            aria-label="Share this sky"
+            title="Share this sky"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 16V3m-5 5 5-5 5 5M5 13v7h14v-7" />
+            </svg></button
+          ><button
+            id="fullscreen"
+            class="icon"
+            aria-label="Enter fullscreen"
+            title="Fullscreen · F"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5" />
+            </svg></button
+          ><span class="separator"></span
+          ><button id="hide" title="Hide interface · H">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
+              <circle cx="12" cy="12" r="3" /></svg
+            ><span>Just the sky</span>
+          </button>
+        </nav>
+      </footer>
+    </div>
+    <div id="cursors" aria-hidden="true"><i></i><i></i></div>
+    <div id="toast" role="status" aria-live="polite"></div>
+    <dialog id="about">
+      <button class="dialog-close icon" aria-label="Close about">×</button>
+      <p class="eyebrow">A SMALL PUBLIC GOOD</p>
+      <h2>A little more<br /><em>golden hour.</em></h2>
+      <p>
+        For the quiet end of a long day. For a room full of friends. For
+        absolutely no reason at all.
+      </p>
+      <p>
+        These clouds are made here, in your browser: billowing volumes, drifting
+        in warm light. Leave them be, or reach in and change the weather.
+      </p>
+      <div class="shortcuts">
+        <span><kbd>H</kbd> Just the sky</span
+        ><span><kbd>F</kbd> Fullscreen</span><span><kbd>Space</kbd> Pause</span
+        ><span><kbd>Esc</kbd> Bring controls back</span>
+      </div>
+      <p class="fine">
+        Double-click the sky to hide or reveal the interface. Controls fade
+        after 30 quiet seconds; move your pointer to bring them back.
+      </p>
+      <p class="fine">
+        Cloud motion is an artistic physical approximation with inertia and hand
+        forces, not a weather prediction. All rendering and optional camera
+        processing happen on your device.
+      </p>
+      <a
+        href="https://github.com/omniharmonic/infinitesunset"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Free to enjoy. Open to everyone. ↗</a
+      >
+    </dialog>
+    <dialog id="share-dialog">
+      <button class="dialog-close icon" aria-label="Close share">×</button>
+      <p class="eyebrow">SEND SOME GOLDEN HOUR</p>
+      <h2>This sky, somewhere else.</h2>
+      <p>
+        The link carries your colors, cloud formation, and atmosphere settings.
+      </p>
+      <label for="share-url">Your sky's link</label
+      ><input id="share-url" readonly /><button
+        id="copy-link"
+        class="small-button"
+      >
+        Copy link
+      </button>
+      <p id="copy-status" role="status"></p>
+    </dialog>
+    <video id="camera-video" playsinline muted hidden></video>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
