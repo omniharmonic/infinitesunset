@@ -53,7 +53,11 @@ function hide() {
   ) {
     manualHidden = true;
     document.body.classList.add("immersed");
-    toast("Just the sky. Press H or double-click to return.");
+    toast(
+      matchMedia("(pointer: coarse)").matches
+        ? "Just the sky. Double-tap to return."
+        : "Just the sky. Press H or double-click to return.",
+    );
   }
 }
 function updatePause() {
@@ -137,11 +141,41 @@ function attachInput() {
     )
       toast(input.status);
   };
-  canvas.addEventListener("dblclick", () =>
-    document.body.classList.contains("immersed") ? reveal() : hide(),
-  );
-  canvas.addEventListener("pointerdown", () => {
+  let lastTap = 0,
+    lastTouchToggle = -1000;
+  let tapStart = { x: 0, y: 0, time: 0 },
+    previousTap = { x: 0, y: 0 };
+  canvas.addEventListener("dblclick", () => {
+    if (performance.now() - lastTouchToggle < 700) return;
+    document.body.classList.contains("immersed") ? reveal() : hide();
+  });
+  canvas.addEventListener("pointerdown", (e) => {
     document.body.classList.add("intro-done");
+    if (e.pointerType === "touch" && e.isPrimary)
+      tapStart = { x: e.clientX, y: e.clientY, time: performance.now() };
+  });
+  canvas.addEventListener("pointerup", (e) => {
+    if (e.pointerType !== "touch" || !e.isPrimary) return;
+    const now = performance.now();
+    if (
+      now - tapStart.time > 350 ||
+      Math.hypot(e.clientX - tapStart.x, e.clientY - tapStart.y) > 15
+    ) {
+      lastTap = 0;
+      return;
+    }
+    if (
+      lastTap > 0 &&
+      now - lastTap < 400 &&
+      Math.hypot(e.clientX - previousTap.x, e.clientY - previousTap.y) < 35
+    ) {
+      lastTap = 0;
+      lastTouchToggle = now;
+      document.body.classList.contains("immersed") ? reveal() : hide();
+    } else {
+      lastTap = now;
+      previousTap = { x: e.clientX, y: e.clientY };
+    }
   });
   canvas.addEventListener("webglcontextlost", (e) => {
     e.preventDefault();

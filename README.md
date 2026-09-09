@@ -25,7 +25,7 @@ Host the contents of `dist/` on any static host. All assets use relative paths, 
 ## Linger, or play
 
 - **Atmosphere:** five color stories plus a continuous journey, cloud cover, drift, billowing, sunlight position, glow, and rendering quality.
-- **Just the sky / H:** hide every interface element and the pointer. Press H, Escape, or double-click to return. A double tap works where the browser generates a double-click; H/Escape always work with a keyboard.
+- **Just the sky / H:** hide every interface element and the pointer. Press H, Escape, or double-click to return. Double-tap on a touchscreen to return; H/Escape work with a keyboard.
 - **F:** fullscreen. The app requests a screen wake lock while fullscreen, where supported.
 - **Space:** pause/resume. Reduced-motion preferences start the sky paused.
 - **Drag / touch:** move the clouds. Choose Gather, Swirl, or Scatter in the atmosphere tray; Shift-drag also scatters.

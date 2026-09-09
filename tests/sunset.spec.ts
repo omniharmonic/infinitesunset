@@ -177,6 +177,29 @@ test("mobile controls fit and touch moves clouds", async ({ page }) => {
     touchPoints: [],
   });
 });
+test("touch users can return from the fully hidden interface", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page);
+  await page.locator("#hide").click();
+  await expect(page.locator("#interface")).toBeHidden();
+  const cdp = await page.context().newCDPSession(page);
+  for (let i = 0; i < 2; i++) {
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: 180, y: 320 }],
+    });
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+    await page.waitForTimeout(70);
+  }
+  await expect(page.locator("#interface")).toBeVisible();
+  await page.waitForTimeout(750);
+  await expect(page.locator("body")).not.toHaveClass(/immersed/);
+});
 test("reduced motion starts paused and still permits control", async ({
   page,
 }) => {
