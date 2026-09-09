@@ -24,7 +24,7 @@ Host the contents of `dist/` on any static host. All assets use relative paths, 
 
 ## Linger, or play
 
-- **Atmosphere:** five color stories plus a continuous journey, cloud cover, drift, billowing, sunlight position, glow, and rendering quality.
+- **Atmosphere:** five color stories plus a continuous journey, a four-color palette editor, cloud density up to 250%, formation diversity, turbulence, drift, breathing, sunlight position, glow, and rendering quality. Sun movement, color evolution, and cloud transformation have independent speed controls; zero holds that clock still. Named and custom palettes both wander around their baseline colors.
 - **Just the sky / H:** hide every interface element and the pointer. Press H, Escape, or double-click to return. Double-tap on a touchscreen to return; H/Escape work with a keyboard.
 - **F:** fullscreen. The app requests a screen wake lock while fullscreen, where supported.
 - **Space:** pause/resume. Reduced-motion preferences start the sky paused.
@@ -37,7 +37,7 @@ Settings persist on your device. Controls fade after 30 idle seconds and return 
 
 ## How the sky works
 
-A deterministic field of 48 cloud lobes drifts continuously through the view. Buoyancy-like motion, damped restoring forces, momentum, and hand forces shape those volumes. Cloud recycling happens outside the visible area. A seeded, tileable three-scale Worley noise volume creates the billows and fine erosion.
+A deterministic field of 96 cloud lobes in 16 banks drifts continuously through the view. Towers, broad banks, thin shelves, and scattered puffs vary in silhouette, scale, and depth. Buoyancy-like motion, a divergence-free analytic velocity field, velocity diffusion within each bank, damped restoring forces, momentum, and hand forces shape those volumes. Whole banks regenerate with new seeded formations outside the visible area. A seeded, tileable three-scale Worley noise volume creates the billows and fine erosion.
 
 The native **WebGPU** path computes a 256 × 128 × 128 volume on the GPU, then ray marches it with Beer–Lambert extinction, sampled self-shadowing, an approximate multiple-scattering contribution, warm directional illumination, atmospheric gradients, tone mapping, and dithering. Surface detail is sampled at render resolution so the cached volume doesn't blur away the billows. **WebGL 2** supplies an equivalent floating-point atlas path when WebGPU is unavailable. Both paths run locally; there is no rendering service.
 

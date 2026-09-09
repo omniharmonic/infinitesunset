@@ -12,16 +12,16 @@ export const skyGLSL = `
  precision highp float;varying vec2 vUv;
  uniform mat4 inverseProjection,cameraWorld;
  uniform vec3 sun,zenith,horizon,direct,shadow;
- uniform float time,exposure,coverage;
+ uniform float time,exposure,coverage;uniform vec4 motion;
  uniform sampler2D atlas;uniform highp sampler3D shapeNoise;uniform float billow;
  ${noiseGLSL}
- const vec3 lo=vec3(-25,-3,-15),hi=vec3(25,14,8);
+ const vec3 lo=vec3(-25,-5,-18),hi=vec3(25,17,10);
  float density(vec3 p){
   vec3 c=(p-lo)/(hi-lo);if(any(lessThan(c,vec3(0)))||any(greaterThan(c,vec3(1))))return 0.;
   vec3 g=c*vec3(255,127,127);float z=floor(g.z),z1=min(z+1.,127.);
   vec2 uv=(vec2(mod(z,16.),floor(z/16.))*vec2(256,128)+g.xy+.5)/vec2(4096,1024);
   vec2 uv1=(vec2(mod(z1,16.),floor(z1/16.))*vec2(256,128)+g.xy+.5)/vec2(4096,1024);
-  float field=mix(texture2D(atlas,uv).r,texture2D(atlas,uv1).r,fract(g.z));if(field<-.65)return 0.;vec3 q=p*.17+vec3(time*.0007,0.,time*.0003*billow);float shape=dot(texture(shapeNoise,q).rgb,vec3(.62,.27,.11));return smoothstep(-.09,.23,field+(shape-.48)*1.65-(texture(shapeNoise,q*3.7).b-.4)*.18)*1.5*coverage;
+  float field=mix(texture2D(atlas,uv).r,texture2D(atlas,uv1).r,fract(g.z));if(field<-.65)return 0.;vec3 warp=vec3(sin(p.y*.6+motion.x*.21),sin(p.z*.55+motion.x*.17),sin(p.x*.45-motion.x*.19))*motion.y*.22;vec3 q=(p+warp)*.17+vec3(motion.x*.004,motion.w,motion.x*.002);float shape=dot(texture(shapeNoise,q).rgb,vec3(.62,.27,.11));return smoothstep(-.09,.23,field+(shape-.48)*1.65-(texture(shapeNoise,q*3.7).b-.4)*(.12+motion.z*.18))*1.5*coverage;
  }
  vec2 intersect(vec3 ro,vec3 rd){vec3 a=(lo-ro)/rd,b=(hi-ro)/rd,mn=min(a,b),mx=max(a,b);return vec2(max(max(mn.x,mn.y),mn.z),min(min(mx.x,mx.y),mx.z));}
  vec3 skyColor(vec3 rd){
@@ -31,7 +31,7 @@ export const skyGLSL = `
   color+=direct*smoothstep(.99976,.9999,alignment)*1.5;
   color=mix(zenith*.5+shadow*.10,color,smoothstep(-.26,.025,rd.y));
   float band=exp(-pow((rd.y+.04)*12.,2.));float wisps=fbm(vec3(rd.x*24.+time*.002,rd.y*75.,4.));
-  color=mix(color,shadow*.8+horizon*.18,band*smoothstep(.4,.72,wisps)*.62);
+  color=mix(color,shadow*.8+horizon*.18,band*smoothstep(.4,.72,wisps)*.62*min(coverage,1.));
   return color;
  }
  void main(){
@@ -92,21 +92,17 @@ export class WebGLSky implements SkyRenderer {
       depthWrite: false,
       uniforms: {
         clouds: { value: sky.centers },
-        shapeNoise: { value: this.noise },
-        time: { value: 0 },
-        billow: { value: 0 },
+        shapes: { value: sky.shapes },
         lo: { value: new T.Vector3().fromArray(BOUNDS_MIN) },
         hi: { value: new T.Vector3().fromArray(BOUNDS_MAX) },
       },
       fragmentShader: `
-  precision highp float;uniform highp sampler3D shapeNoise;uniform vec4 clouds[${COUNT}];uniform float time,billow;uniform vec3 lo,hi;
+  precision highp float;uniform vec4 clouds[${COUNT}],shapes[${COUNT}];uniform vec3 lo,hi;
   void main(){vec2 pixel=floor(gl_FragCoord.xy),tile=floor(pixel/vec2(256,128));float z=tile.x+tile.y*16.;
    vec3 p=mix(lo,hi,vec3(mod(pixel,vec2(256,128)),z)/vec3(255,127,127));float field=-30.;
-   for(int i=0;i<${COUNT};i++){float f=clouds[i].w-length((p-clouds[i].xyz)/vec3(1.18,.88,1.));float b=max(0.,.42-abs(field-f))/.42;field=max(field,f)+b*b*.105;}
+   for(int i=0;i<${COUNT};i++){vec3 q=(p-clouds[i].xyz)/shapes[i].xyz;float reach=clouds[i].w+1.3;if(dot(q,q)>reach*reach)continue;float f=clouds[i].w-length(q);float b=max(0.,.42-abs(field-f))/.42;field=max(field,f)+b*b*.105;}
    if(field<-.65){gl_FragColor=vec4(-2,0,0,1);return;}
-   vec3 q=p*.17+vec3(time*.0007,0.,time*.0003*billow);vec3 cells=texture(shapeNoise,q).rgb;
-   float shape=dot(cells,vec3(.62,.27,.11));float d=smoothstep(-.06,.22,field+(shape-.48)*1.65-(texture(shapeNoise,q*3.7).b-.4)*.18)*1.5;
-   gl_FragColor=vec4(field,d,0,1.);
+   gl_FragColor=vec4(field,0,0,1.);
   }`,
     });
     this.material = new T.ShaderMaterial({
@@ -118,6 +114,7 @@ export class WebGLSky implements SkyRenderer {
         inverseProjection: { value: sky.camera.projectionMatrixInverse },
         cameraWorld: { value: sky.camera.matrixWorld },
         sun: { value: sky.sunlight },
+        motion: { value: new T.Vector4() },
         zenith: { value: sky.colors[0] },
         horizon: { value: sky.colors[1] },
         direct: { value: sky.colors[2] },
@@ -146,14 +143,18 @@ export class WebGLSky implements SkyRenderer {
         sky.time === this.fieldTime)
     ) {
       this.fieldTime = sky.time;
-      this.field.uniforms.time.value = sky.time;
-      this.field.uniforms.billow.value = sky.settings.billow;
       this.renderer.setRenderTarget(this.target);
       this.renderer.render(this.fieldScene, this.camera);
       this.renderer.setRenderTarget(null);
       this.lastRevision = sky.revision;
     }
     this.material.uniforms.time.value = sky.time;
+    this.material.uniforms.motion.value.set(
+      sky.cloudTime,
+      sky.settings.turbulence,
+      sky.settings.variety,
+      sky.settings.seed * 0.0137,
+    );
     this.material.uniforms.billow.value = sky.settings.billow;
     this.material.uniforms.exposure.value = sky.settings.exposure;
     this.material.uniforms.coverage.value =

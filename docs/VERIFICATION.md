@@ -9,3 +9,10 @@
 - No JavaScript, WebGL, or WebGPU errors were seen in the production smoke checks. Shipped dependencies had zero reported vulnerabilities in `npm audit --omit=dev` at release time.
 
 The domain remains on Namecheap forwarding until its DNS records are changed. The working release is available at https://omniharmonic.github.io/infinitesunset/. See DOMAIN.md for the custom-domain steps.
+
+## Expanded atmosphere update
+
+- 96 cloud lobes in 16 regenerating banks; cloud density extends to 250%.
+- Added formation diversity, turbulence, stronger breathing, and transformation speed.
+- Added four editable palette colors, theme-to-custom capture, color wandering, and independent sun/color speeds. Legacy saved settings and shared links retain their existing values and receive safe defaults for new controls.
+- Fourteen numerical/state tests verify bounded motion, recycling, independent clocks, frozen rates, changing named palettes, density range, and custom-color sanitization. Eleven browser flows cover the expanded editor, high cloud density, and custom settings restored from a shared URL, as well as the existing camera/fullscreen/touch flows.

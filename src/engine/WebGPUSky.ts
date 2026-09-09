@@ -1,7 +1,7 @@
 /// <reference types="@webgpu/types" />
 import { createCloudNoise } from "./CloudNoise";
 import { fieldWGSL, renderWGSL } from "./shaders";
-import type { Sky, SkyRenderer } from "./Sky";
+import { COUNT, type Sky, type SkyRenderer } from "./Sky";
 export class WebGPUSky implements SkyRenderer {
   readonly kind = "WebGPU";
   private context: GPUCanvasContext;
@@ -16,8 +16,8 @@ export class WebGPUSky implements SkyRenderer {
   private revision = -1;
   private fieldTime = -1;
   private destroyed = false;
-  private data = new Float32Array(52);
-  private positions = new Float32Array(48 * 4);
+  private data = new Float32Array(56);
+  private positions = new Float32Array(COUNT * 8);
   static async create(canvas: HTMLCanvasElement, onLost: () => void) {
     if (!navigator.gpu) throw new Error("WebGPU unavailable");
     const adapter = await navigator.gpu.requestAdapter({
@@ -47,11 +47,11 @@ export class WebGPUSky implements SkyRenderer {
       alphaMode: "opaque",
     });
     this.params = device.createBuffer({
-      size: 208,
+      size: 224,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     this.centers = device.createBuffer({
-      size: 768,
+      size: COUNT * 32,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
     this.volume = device.createTexture({
@@ -124,10 +124,7 @@ export class WebGPUSky implements SkyRenderer {
     this.fieldGroup = d.createBindGroup({
       layout: this.compute.getBindGroupLayout(0),
       entries: [
-        { binding: 0, resource: { buffer: this.params } },
         { binding: 1, resource: { buffer: this.centers } },
-        { binding: 2, resource: this.noise.createView() },
-        { binding: 3, resource: sampler },
         { binding: 4, resource: this.volume.createView() },
       ],
     });
@@ -165,6 +162,15 @@ export class WebGPUSky implements SkyRenderer {
     u[39] = sky.settings.density === 0 ? 0 : 0.65 + sky.settings.density * 0.5;
     u[43] = sky.settings.exposure;
     u[47] = sky.settings.billow;
+    u.set(
+      [
+        sky.cloudTime,
+        sky.settings.turbulence,
+        sky.settings.variety,
+        sky.settings.seed * 0.0137,
+      ],
+      52,
+    );
     this.device.queue.writeBuffer(this.params, 0, u);
     const encoder = this.device.createCommandEncoder();
     if (
@@ -175,8 +181,10 @@ export class WebGPUSky implements SkyRenderer {
         sky.time === this.fieldTime)
     ) {
       this.fieldTime = sky.time;
-      for (let i = 0; i < 48; i++)
-        sky.centers[i].toArray(this.positions, i * 4);
+      for (let i = 0; i < COUNT; i++) {
+        sky.centers[i].toArray(this.positions, i * 8);
+        sky.shapes[i].toArray(this.positions, i * 8 + 4);
+      }
       this.device.queue.writeBuffer(this.centers, 0, this.positions);
       const pass = encoder.beginComputePass();
       pass.setPipeline(this.compute);

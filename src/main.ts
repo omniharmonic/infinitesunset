@@ -7,7 +7,11 @@ import {
   saveSettings,
   shareURL,
   type Settings,
+  ranges,
+  type RangeKey,
 } from "./settings";
+import { colorKeys, colorsToHex } from "./colors";
+const rangeKeys = Object.keys(ranges) as RangeKey[];
 const $ = <T extends HTMLElement = HTMLElement>(id: string) =>
   document.getElementById(id) as T;
 const settings = readSettings();
@@ -80,21 +84,22 @@ function resize() {
   renderer?.resize(innerWidth, innerHeight, desired);
 }
 function refresh() {
-  for (const key of [
-    "density",
-    "speed",
-    "billow",
-    "light",
-    "exposure",
-  ] as const) {
+  for (const key of rangeKeys) {
     const el = $<HTMLInputElement>(key);
     el.value = String(Math.round(settings[key] * 100));
     el.style.setProperty(
       "--value",
       `${((Number(el.value) - Number(el.min)) / (Number(el.max) - Number(el.min))) * 100}%`,
     );
-    $(`${key}-value`).textContent =
-      key === "speed"
+    $(`${key}-value`).textContent = [
+      "sunRate",
+      "colorRate",
+      "breathingRate",
+    ].includes(key)
+      ? settings[key] === 0
+        ? "Still"
+        : `${settings[key].toFixed(2)}×`
+      : key === "speed"
         ? settings.speed === 0
           ? "Still"
           : settings.speed < 0.35
@@ -109,6 +114,14 @@ function refresh() {
               ? "East"
               : "Ahead"
           : `${el.value}%`;
+  }
+  const shownColors =
+    settings.palette === "custom"
+      ? settings.customColors
+      : colorsToHex(sky.colors);
+  for (const key of colorKeys) {
+    $<HTMLInputElement>(`color-${key}`).value = shownColors[key];
+    $(`hex-${key}`).textContent = shownColors[key];
   }
   $<HTMLSelectElement>("palette").value = settings.palette;
   $<HTMLSelectElement>("quality").value = settings.quality;
@@ -333,15 +346,10 @@ async function keepAwake() {
   }
 }
 function wire() {
-  for (const key of [
-    "density",
-    "speed",
-    "billow",
-    "light",
-    "exposure",
-  ] as const)
+  for (const key of rangeKeys)
     $<HTMLInputElement>(key).addEventListener("input", (e) => {
       settings[key] = Number((e.target as HTMLInputElement).value) / 100;
+      if (key === "variety") sky.reshape();
       sky.revision++;
       refresh();
       saveSettings(settings);
@@ -349,14 +357,46 @@ function wire() {
   for (const key of ["palette", "quality"] as const)
     $<HTMLSelectElement>(key).addEventListener("change", (e) => {
       Object.assign(settings, { [key]: (e.target as HTMLSelectElement).value });
+      sky.update(0, []);
       refresh();
       saveSettings(settings);
       resize();
+    });
+  $("capture-colors").onclick = () => {
+    settings.customColors = colorsToHex(sky.colors);
+    sky.colorTime = 0;
+    settings.palette = "custom";
+    refresh();
+    saveSettings(settings);
+    toast("This moment is your palette. Make it your own.");
+  };
+  for (const key of colorKeys)
+    $<HTMLInputElement>(`color-${key}`).addEventListener("input", (e) => {
+      const startingColors =
+        settings.palette === "custom"
+          ? settings.customColors
+          : colorsToHex(sky.colors);
+      if (settings.palette !== "custom") sky.colorTime = 0;
+      settings.customColors = {
+        ...startingColors,
+        [key]: (e.target as HTMLInputElement).value,
+      };
+      settings.palette = "custom";
+      refresh();
+      saveSettings(settings);
     });
   $<HTMLInputElement>("evolve").onchange = (e) => {
     settings.evolve = (e.target as HTMLInputElement).checked;
     saveSettings(settings);
   };
+  $("color-editor").addEventListener("toggle", () => {
+    if (
+      ($("color-editor") as HTMLDetailsElement).open &&
+      settings.palette !== "custom"
+    ) {
+      refresh();
+    }
+  });
   $("atmosphere").onclick = () => openPanel($("panel").hidden);
   $("close-panel").onclick = () => openPanel(false);
   $("camera-button").onclick = () => void input.toggleCamera();

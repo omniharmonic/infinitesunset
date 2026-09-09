@@ -758,3 +758,75 @@ kbd {
     transition: none !important;
   }
 }
+
+.color-editor {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px;
+  margin: -8px 0 24px;
+  background: #ffffff04;
+}
+.color-editor summary {
+  font-size: 11px;
+  cursor: pointer;
+  list-style: none;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.color-editor summary::-webkit-details-marker {
+  display: none;
+}
+.color-editor summary span {
+  color: var(--accent);
+}
+.color-editor[open] summary span {
+  transform: rotate(45deg);
+}
+.color-editor p,
+.control-note {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+.color-editor .text-button {
+  margin: 0 0 18px;
+}
+.color-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 14px;
+}
+.color-grid label {
+  display: grid;
+  grid-template-columns: 30px 1fr;
+  gap: 5px 8px;
+  align-items: center;
+  font-size: 10px;
+}
+.color-grid label > span {
+  grid-column: 1/-1;
+}
+.color-grid input {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: none;
+  cursor: pointer;
+}
+.color-grid input::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+.color-grid input::-webkit-color-swatch {
+  border: 0;
+  border-radius: 4px;
+}
+.color-grid output {
+  font: 9px monospace;
+  color: var(--muted);
+}
+.control-note {
+  margin: -3px 0 22px;
+}

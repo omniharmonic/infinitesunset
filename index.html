@@ -91,12 +91,46 @@
             <option value="lavender">Violet hour</option>
             <option value="blue">Afterglow</option>
             <option value="ember">Ember</option>
+            <option value="custom">My own colors</option>
           </select>
         </div>
+        <details class="color-editor" id="color-editor">
+          <summary>Compose your own palette <span>＋</span></summary>
+          <p>
+            Begin with any color story. Paint the sky, its glow, and its
+            shadows.
+          </p>
+          <button id="capture-colors" class="text-button">
+            Start from this moment ↗
+          </button>
+          <div class="color-grid">
+            <label for="color-zenith"
+              ><span>Upper sky</span
+              ><input type="color" id="color-zenith" /><output
+                id="hex-zenith"
+              ></output></label
+            ><label for="color-horizon"
+              ><span>Horizon</span
+              ><input type="color" id="color-horizon" /><output
+                id="hex-horizon"
+              ></output></label
+            ><label for="color-sunlight"
+              ><span>Sunlight</span
+              ><input type="color" id="color-sunlight" /><output
+                id="hex-sunlight"
+              ></output></label
+            ><label for="color-shadow"
+              ><span>Cloud shadows</span
+              ><input type="color" id="color-shadow" /><output
+                id="hex-shadow"
+              ></output
+            ></label>
+          </div>
+        </details>
         <div id="sliders">
           <label class="range-label" for="density"
-            >Cloud cover <output id="density-value"></output
-            ><input id="density" type="range" min="0" max="100" step="1"
+            >Cloud density <output id="density-value"></output
+            ><input id="density" type="range" min="0" max="250" step="1"
           /></label>
           <label class="range-label" for="speed"
             >Drift <output id="speed-value"></output
@@ -106,6 +140,27 @@
             >Breathing <output id="billow-value"></output
             ><input id="billow" type="range" min="0" max="100" step="1"
           /></label>
+          <label class="range-label" for="variety"
+            >Formation diversity<output id="variety-value"></output
+            ><input
+              id="variety"
+              type="range"
+              min="0"
+              max="100"
+              step="1" /></label
+          ><label class="range-label" for="turbulence"
+            >Turbulence<output id="turbulence-value"></output
+            ><input
+              id="turbulence"
+              type="range"
+              min="0"
+              max="100"
+              step="1" /></label
+          ><label class="range-label" for="breathingRate"
+            >Transformation speed<output id="breathingRate-value"></output
+            ><input id="breathingRate" type="range" min="0" max="400" step="1"
+          /></label>
+          <div class="panel-divider"></div>
           <label class="range-label" for="light"
             >Sun position <output id="light-value"></output
             ><input id="light" type="range" min="0" max="100" step="1"
@@ -122,6 +177,25 @@
             ></span
           ><input id="evolve" type="checkbox" role="switch"
         /></label>
+        <label class="range-label" for="sunRate"
+          >Sun movement speed<output id="sunRate-value"></output
+          ><input id="sunRate" type="range" min="0" max="800" step="1" /></label
+        ><label class="range-label" for="colorRate"
+          >Color evolution speed<output id="colorRate-value"></output
+          ><input
+            id="colorRate"
+            type="range"
+            min="0"
+            max="800"
+            step="1" /></label
+        ><label class="range-label" for="colorShift"
+          >Color wandering<output id="colorShift-value"></output
+          ><input id="colorShift" type="range" min="0" max="100" step="1"
+        /></label>
+        <p class="control-note">
+          Each story shifts gently around its colors. Zero speed holds that part
+          of the sky still.
+        </p>
         <div class="setting quality">
           <label for="quality">Rendering</label
           ><select id="quality">

@@ -209,3 +209,56 @@ test("reduced motion starts paused and still permits control", async ({
   await page.locator("#pause").click();
   await expect.poll(async () => (await state(page)).paused).toBe(false);
 });
+
+test("custom palette and expanded cloud controls survive a shared link", async ({
+  page,
+}) => {
+  await open(page);
+  await page.locator("#atmosphere").click();
+  await page.locator("#palette").selectOption("rose");
+  await page.locator("#color-editor summary").click();
+  await page.locator("#capture-colors").click();
+  await page.locator("#color-zenith").fill("#26385e");
+  await page.locator("#color-horizon").fill("#d18a61");
+  await page.locator("#density").fill("225");
+  await page.locator("#variety").fill("94");
+  await page.locator("#turbulence").fill("72");
+  await page.locator("#breathingRate").fill("250");
+  await page.locator("#sunRate").fill("0");
+  await page.locator("#colorRate").fill("400");
+  expect((await state(page)).settings.palette).toBe("custom");
+  expect((await state(page)).clouds).toBe(96);
+  expect((await state(page)).settings.density).toBe(2.25);
+  const before = await state(page);
+  await page.waitForTimeout(450);
+  const after = await state(page);
+  expect(after.lightTime).toBe(before.lightTime);
+  expect(after.colorTime).toBeGreaterThan(before.colorTime);
+  expect(after.colorValues).not.toEqual(before.colorValues);
+  await page.locator("#close-panel").click();
+  await page.locator("#share").click();
+  const url = await page.locator("#share-url").inputValue();
+  await page.evaluate(() => localStorage.clear());
+  await page.goto(url);
+  await expect.poll(async () => (await state(page)).ready).toBe(true);
+  const restored = await state(page);
+  expect(restored.settings.customColors.zenith).toBe("#26385e");
+  expect(restored.settings.customColors.horizon).toBe("#d18a61");
+  expect(restored.settings.breathingRate).toBe(2.5);
+  expect(restored.settings.sunRate).toBe(0);
+  expect(restored.settings.colorRate).toBe(4);
+});
+
+test("browsing theme baselines preserves a hand-crafted palette", async ({
+  page,
+}) => {
+  await open(page);
+  await page.locator("#atmosphere").click();
+  await page.locator("#color-editor summary").click();
+  await page.locator("#color-horizon").fill("#ae5867");
+  await page.locator("#palette").selectOption("blue");
+  expect((await state(page)).settings.customColors.horizon).toBe("#ae5867");
+  await expect(page.locator("#color-horizon")).not.toHaveValue("#ae5867");
+  await page.locator("#palette").selectOption("custom");
+  await expect(page.locator("#color-horizon")).toHaveValue("#ae5867");
+});
